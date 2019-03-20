@@ -17,7 +17,7 @@ merge = merge.reset_index()
 merge.columns = ['country', 'year', 'inflation', 'unemployment']
 merge.year = merge.year.astype(int)
 
-#Data description
+#Data description.
 mean_infl = merge.groupby("country")['inflation'].mean()
 median_infl = merge.groupby("country")['inflation'].median()
 mean_unem = merge.groupby("country")['unemployment'].mean()
