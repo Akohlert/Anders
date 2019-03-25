@@ -1,19 +1,21 @@
 import pandas as pd
+#pip install linearmodels (Run in terminal)
+from linearmodels import PanelOLS 
 import numpy as np 
 import matplotlib.pyplot as plt 
 import pandas_datareader
 from pandas_datareader import wb
 import seaborn as sns
 import scipy.stats  as stats
-from scipy.stats.stat import pearsonr
+from scipy.stats.stats import pearsonr
 
 ###### Downloading inflation and unemployment data from World Bank ######
 cntr = ['DK','SE','FR','NL','DE','GB','BE', 'LU', 'AT', 'FI']
 cntr1 = ['MX','IN','BR','ID','KE','LY','MY','NG','NO','US']
 infl_eu = wb.download(indicator='FP.CPI.TOTL.ZG', country=cntr, start=1991, end=2017)
-infl_other = wb.download(indicator='FP.CPI.TOTL.ZG', country=cntr1, start=2000, end=2017)
+infl_other = wb.download(indicator='FP.CPI.TOTL.ZG', country=cntr1, start=1991, end=2017)
 unem_eu = wb.download(indicator='SL.UEM.TOTL.ZS', country=cntr, start=1991, end=2017)
-unem_other = wb.download(indicator='SL.UEM.TOTL.ZS', country=cntr1, start=2000, end=2017)
+unem_other = wb.download(indicator='SL.UEM.TOTL.ZS', country=cntr1, start=1991, end=2017)
 
 ###### Data manipulation ######
 
@@ -94,3 +96,19 @@ Pval
 
 corr_QE
 Pval_QE
+
+merge_eu = merge_eu.reset_index()
+year_full = pd.Categorical(merge_eu.year)
+merge_eu = merge_eu.set_index(['country','year'])
+merge_eu['year']=year_full
+regression1=PanelOLS(merge_eu.inflation, merge_eu.unemployment, entity_effects=True)
+res1 = regression1.fit(cov_type='clustered', cluster_entity=True)
+print(res1)
+
+after_QE = after_QE.reset_index()
+year_QE = pd.Categorical(after_QE.year)
+after_QE = after_QE.set_index(['country','year'])
+after_QE['year']=year_QE
+regression2=PanelOLS(after_QE.inflation, after_QE.unemployment, entity_effects=True)
+res2 = regression2.fit(cov_type='clustered', cluster_entity=True)
+print(res2)
