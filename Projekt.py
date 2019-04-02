@@ -1,5 +1,5 @@
 import pandas as pd
-#pip install linearmodels (Run in terminal)
+#pip install linearmodels #Run in terminal
 from linearmodels import PanelOLS 
 import numpy as np 
 import matplotlib.pyplot as plt 
@@ -9,15 +9,15 @@ import seaborn as sns
 import scipy.stats  as stats
 from scipy.stats.stats import pearsonr
 
-###### Downloading inflation and unemployment data from World Bank ######
-cntr = ['DK','SE','FR','NL','DE','GB','BE', 'LU', 'AT', 'FI']
-cntr1 = ['MX','IN','BR','ID','KE','LY','MY','NG','NO','US']
-infl_eu = wb.download(indicator='FP.CPI.TOTL.ZG', country=cntr, start=1991, end=2017)
-infl_other = wb.download(indicator='FP.CPI.TOTL.ZG', country=cntr1, start=1991, end=2017)
-unem_eu = wb.download(indicator='SL.UEM.TOTL.ZS', country=cntr, start=1991, end=2017)
-unem_other = wb.download(indicator='SL.UEM.TOTL.ZS', country=cntr1, start=1991, end=2017)
+###### a. Downloading inflation and unemployment data from World Bank ######
+cntr_eu = ['DK','SE','FR','NL','DE','GB','BE', 'LU', 'AT', 'FI'] # Subset of countries affected by ECB's quantitative easing (QE)
+cntr_other = ['CA','CH','AU','NZ','SG','NO','US', 'JP', 'KR'] # Subset of countries not affected by ECB's QE
+infl_eu = wb.download(indicator='FP.CPI.TOTL.ZG', country=cntr_eu, start=1991, end=2017) 
+infl_other = wb.download(indicator='FP.CPI.TOTL.ZG', country=cntr_other, start=1991, end=2017)
+unem_eu = wb.download(indicator='SL.UEM.TOTL.ZS', country=cntr_eu, start=1991, end=2017)
+unem_other = wb.download(indicator='SL.UEM.TOTL.ZS', country=cntr_other, start=1991, end=2017)
 
-###### Data manipulation ######
+###### b. Data structuring ######
 
 merge_eu = pd.concat([infl_eu, unem_eu], axis=1)
 merge_eu = merge_eu.reset_index()
@@ -29,7 +29,8 @@ merge_eu
 after_QE = merge_eu[merge_eu['year']>=2015]
 after_QE
 
-###### Data description ######
+###### c. Data description ######
+
 mean_infl_eu = merge_eu.groupby("country")['inflation'].mean()
 median_infl_eu = merge_eu.groupby("country")['inflation'].median()
 mean_unem_eu = merge_eu.groupby("country")['unemployment'].mean()
@@ -39,16 +40,14 @@ tabel = pd.concat([mean_infl_eu, median_infl_eu, mean_unem_eu, median_unem_eu], 
 tabel.columns = ['Average inflation', 'Median inflation', 'Average unemployment', 'Median unemployment']
 tabel
 
-Maximum = merge_eu.describe()
-Maximum
+####### d. Plots ########
 
-####### Plots ########
+     #Fix nedenstående, så de ikke bliver lavet sammen. 
 z = merge_eu.set_index('year').groupby('country')['inflation'].plot(legend=True)
-
 y = merge_eu.set_index('year').groupby('country')['unemployment'].plot(legend=True)
 
 #Development in inflation over time
-sns.set_style("whitegrid")
+sns.set_style("whitegrid") # Setting seaborn graphstyle to "whitegrid"
 g = sns.FacetGrid(merge_eu, col='country', hue='country', col_wrap=4, palette="deep")
 g = g.map(plt.plot, 'year', 'inflation')
 g = g.map(plt.fill_between, 'year', 'inflation', alpha=0.2).set_titles("{col_name}")  
@@ -67,7 +66,7 @@ SR = sns.FacetGrid(after_QE, col='country', hue='country', col_wrap=4, palette="
 SR = SR.map(plt.plot, 'unemployment', 'inflation').set_titles("{col_name}") 
 
 
-###### Calculating correlation and significance ######
+###### e. Calculating correlation and significance ######
 
 #Defining function calculating p-values
 def calculate_pvalues(df):
@@ -90,12 +89,14 @@ Pval = calculate_pvalues(merge_eu)
 corr_QE = after_QE.corr()
 Pval_QE = calculate_pvalues(after_QE)
 
-#Printing results
+#Printing correlation and significance results
 corr
 Pval
 
 corr_QE
 Pval_QE
+
+######## f. Panel data regression analysis #######
 
 merge_eu = merge_eu.reset_index()
 year_full = pd.Categorical(merge_eu.year)
